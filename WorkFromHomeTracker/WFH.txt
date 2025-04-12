@@ -1,0 +1,26 @@
+1) give db details in setting.py
+
+
+{	DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'WFH',
+        'USER': 'root',
+        'PASSWORD': '123456',
+        'HOST': 'localhost',  # Change if using a remote database
+        'PORT': '3306',  # Default MySQL port
+    }
+}
+
+
+2) create a db in ur system WFH
+
+3) pip install pandas openpyxl
+
+4) open cmd with file location 
+
+5) py manage.py makemigrations
+
+6) py manage.py migrate
+
+7) python manage.py runserver

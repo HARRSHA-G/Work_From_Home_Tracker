@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work From Home Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@5/dist/inspector.css">
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #87CEEB, #FFC5C5);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .wrapper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 90%;
+      max-width: 1200px;
+    }
+
+    #observablehq-chart-4718ef8a {
+      width: 45%; /* Increased size */
+    }
+
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      width: 45%;
+      text-align: center;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 24px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #555;
+    }
+
+    input, .location-buttons, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .location-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: none;
+      padding: 0;
+    }
+
+    .location-buttons button {
+      flex: 1;
+      background: #ffe0b2; /* Light orange */
+      color: #333;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .location-buttons button:hover {
+      background: #ffcc80; /* Medium orange */
+      transform: scale(1.05);
+    }
+
+    .location-buttons button.active {
+      background: #ff9800; /* Dark orange */
+      color: white;
+    }
+
+    button[type="submit"] {
+      background: linear-gradient(135deg, #ff9800, #fb8c00); /* Orange gradient */
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button[type="submit"]:hover {
+      background: linear-gradient(135deg, #fb8c00, #f57c00); /* Darker orange gradient */
+      transform: scale(1.05);
+    }
+
+    #details {
+      margin-top: 20px;
+      text-align: left;
+      animation: slideIn 0.5s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    #details p {
+      margin: 10px 0;
+      font-size: 16px;
+      color: #333;
+    }
+
+    #details strong {
+      color: #555;
+    }
+
+    /* Media Queries */
+    @media (max-width: 768px) {
+      #observablehq-chart-4718ef8a {
+        display: none;
+      }
+
+      .container {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div id="observablehq-chart-4718ef8a"></div>
+    <div class="container">
+      <h1>Work From Home Tracker</h1>
+      <form id="trackerForm">
+        <label for="userID">User ID:</label>
+        <input type="text" id="userID" name="userID" required placeholder="Enter your User ID">
+
+        <label>Select Work Location:</label>
+        <div class="location-buttons">
+          <button type="button" data-location="home">Home</button>
+          <button type="button" data-location="college">College</button>
+          <button type="button" data-location="company">Company</button>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+
+      <div id="details" class="hidden">
+        <h2>Details:</h2>
+        <p><strong>User ID:</strong> <span id="userEmail"></span></p>
+        <p><strong>Work Location:</strong> <span id="workLocation"></span></p>
+        <p><strong>Address:</strong> <span id="fullAddress"></span></p>
+        <p><strong>IP Address:</strong> <span id="ipAddress"></span></p>
+        <p><strong>Server Time:</strong> <span id="serverTime"></span></p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {Runtime, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@5/dist/runtime.js";
+    import define from "https://api.observablehq.com/@d3/disjoint-force-directed-graph/2.js?v=4";
+    new Runtime().module(define, name => {
+      if (name === "chart") return new Inspector(document.querySelector("#observablehq-chart-4718ef8a"));
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const locationButtons = document.querySelectorAll('.location-buttons button');
+      let selectedLocation = '';
+
+      locationButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          locationButtons.forEach(btn => btn.classList.remove('active'));
+          button.classList.add('active');
+          selectedLocation = button.getAttribute('data-location');
+        });
+      });
+
+      document.getElementById('trackerForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const userID = document.getElementById('userID').value;
+
+        if (!selectedLocation) {
+          alert('Please select a work location.');
+          return;
+        }
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`
+            );
+            const data = await response.json();
+            const address = data.address;
+
+            const fullAddress = [
+              address.road,
+              address.neighbourhood,
+              address.city || address.town || address.village,
+              address.state,
+              address.country,
+              address.postcode
+            ].filter(Boolean).join(', ');
+
+            document.getElementById('fullAddress').textContent = fullAddress;
+
+            const ipResponse = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipResponse.json();
+            document.getElementById('ipAddress').textContent = ipData.ip;
+
+            const now = new Date();
+            document.getElementById('serverTime').textContent = now.toLocaleString();
+
+            document.getElementById('userEmail').textContent = userID;
+            document.getElementById('workLocation').textContent = selectedLocation;
+
+            document.getElementById('details').style.display = 'block';
+          }, (error) => {
+            alert('Error fetching location: ' + error.message);
+          });
+        } else {
+          alert('Geolocation not supported.');
+        }
+      });
+      // Auto-refresh the page every 3 minutes
+      setTimeout(() => {
+        location.reload();
+      }, 180000); // 180000 milliseconds = 3 minutes
+
+    });
+  </script>
+</body>
+</html>
